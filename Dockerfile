@@ -1,14 +1,22 @@
 FROM node:19-slim
 
 WORKDIR /home/node/app
+
+COPY package.json package-lock.json ./
+RUN \
+    if [ -f package-lock.json]; then npm ci; \
+    else echo "lockfile not found" && npm install; \
+    fi
+
+COPY . .
+
 RUN chown -R node:node /home/node/app
-
-ARG NODE_ENV=development
-ENV NODE_ENV=${NODE_ENV}
-
-COPY package*.json ./
-RUN npm install
 USER node
 
+RUN npx prisma generate
+CMD \
+    if [ -f package-lock.json]; then npm run build; \
+    else npm run dev; \
+    fi
 
-CMD ["npm", "run", "dev"]
+
